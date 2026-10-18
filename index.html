@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>結帳合計</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--text:#1c1f24;--muted:#6b7280;--line:#e3e6ea;--accent:#0f766e;--accent-text:#fff;--danger:#b91c1c;--total-bg:#fff3bf;--total-text:#7a5a00;--red-bg:#fcd5d5;--red-text:#9b1c1c;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--total-bg:#4a4120;--total-text:#f5e6a3;--red-bg:#5a2427;--red-text:#fecaca;--bg:#14171a;--card:#1e2327;--text:#eceff1;--muted:#9aa4ad;--line:#2d343a;--accent:#2dd4bf;--accent-text:#06231f;--danger:#f87171;color-scheme:dark}}
+:root[data-theme="dark"]{--total-bg:#4a4120;--total-text:#f5e6a3;--red-bg:#5a2427;--red-text:#fecaca;--bg:#14171a;--card:#1e2327;--text:#eceff1;--muted:#9aa4ad;--line:#2d343a;--accent:#2dd4bf;--accent-text:#06231f;--danger:#f87171;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;padding:16px}
+.wrap{max-width:480px;margin:0 auto}
+h1{font-size:20px;margin:4px 0 12px}
+h2{font-size:17px;margin:28px 0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 14px;position:relative;overflow:hidden}
+.card>.row{position:relative;z-index:1}
+:root{--blend:multiply}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--blend:screen}}
+:root[data-theme="dark"]{--blend:screen}
+.photos{position:absolute;inset:0;z-index:0;pointer-events:none}
+.photos img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;mix-blend-mode:var(--blend)}
+.card.noblend .photos img{mix-blend-mode:normal}
+.pbar{margin-top:14px}
+.pbar .top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pbar .top button{width:auto;margin:0;padding:8px 14px;font-size:15px}
+.pbar label{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.pitem{display:flex;align-items:center;gap:10px;margin-top:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.pth{width:44px;height:44px;object-fit:cover;border-radius:8px;flex:none}
+.pitem input[type=range]{flex:1;min-width:0;padding:0;border:0;background:transparent;accent-color:var(--accent)}
+.pval{width:40px;text-align:right;font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pitem .pdel{width:auto;margin:0;padding:6px 10px;font-size:14px;color:var(--danger)}
+.phint{color:var(--muted);font-size:13px;margin-top:6px}
+.row{display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.head{color:var(--text);font-size:14px;font-weight:600}
+.row input{background:color-mix(in srgb,var(--card) 40%,transparent)}
+.d{font-size:18px;font-weight:600;text-align:center;font-variant-numeric:tabular-nums}
+input{width:100%;font-size:20px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text);text-align:center}
+input:focus{outline:2px solid var(--accent);border-color:transparent}
+.sub{text-align:center;font-size:18px;font-variant-numeric:tabular-nums}
+.total{margin-top:14px;background:var(--total-bg);color:var(--total-text);border-radius:14px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center}
+.total span{font-size:15px}
+.total.red{background:var(--red-bg);color:var(--red-text)}
+.total.plain{background:var(--card);color:var(--text);border:1px solid var(--line)}
+.total input{width:160px;font-size:24px;font-weight:700;text-align:right;background:var(--card);color:var(--text)}
+.rec-pos{color:var(--muted);font-size:14px;margin-top:2px}
+.total b{font-size:32px;font-variant-numeric:tabular-nums}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.meta input{font-size:16px;text-align:left}
+button{margin-top:12px;width:100%;padding:12px;font-size:16px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--text)}
+button.primary{background:var(--total-bg);color:var(--total-text);border-color:var(--total-text);font-weight:600}
+.btns{display:grid;grid-template-columns:2fr 1fr;gap:10px}
+.rec{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+.rec-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.rec-date{font-weight:600}
+.rec-total{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.rec-note{color:var(--muted);font-size:14px;margin-top:2px}
+.rec table{width:100%;border-collapse:collapse;margin-top:8px;font-size:15px;font-variant-numeric:tabular-nums}
+.rec th{color:var(--muted);font-weight:400;font-size:13px;text-align:right;padding:4px 0}
+.rec td{padding:4px 0;text-align:right;border-top:1px solid var(--line)}
+.rec th:first-child,.rec td:first-child{text-align:left}
+.rec .del{width:auto;margin-top:8px;padding:6px 12px;font-size:14px;color:var(--danger)}
+.status{color:var(--muted);font-size:13px;margin:-4px 0 10px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--text);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:15px;max-width:90%;display:none;z-index:20}
+.empty{color:var(--muted);text-align:center;padding:16px 0}
+.toast{display:none;white-space:pre-line}
+.warn{background:var(--red-bg);color:var(--red-text);border-radius:12px;padding:10px 14px;font-size:14px;margin:0 0 10px;display:none;white-space:pre-line}
+.mask{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:30;padding:20px}
+.dlg{background:var(--card);color:var(--text);border-radius:16px;padding:20px;max-width:340px;width:100%}
+.dlg p{margin:0 0 4px;font-size:16px;line-height:1.5}
+.dlg .btns{margin-top:8px}
+.dlg button{margin-top:8px}
+button.danger{background:var(--danger);color:#fff;border-color:transparent;font-weight:600}
+button:disabled{opacity:.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>結帳合計</h1>
+<div class="card" id="list"><div class="photos" id="photos"></div>
+<div class="row head"><div style="text-align:center">面額</div><div style="text-align:center">張數</div><div style="text-align:center">小計</div></div>
+</div>
+<div class="total" id="boxTotal"><span>總金額</span><b id="total">0</b></div>
+<div class="total" id="boxPos"><span>應有金額</span><input type="text" inputmode="numeric" autocomplete="off" id="pos" placeholder="0" aria-label="應有金額"></div>
+<div class="total plain" id="boxDiff" style="display:none"><span>差額</span><b id="diff"></b></div>
+<div class="btns">
+<button class="primary" id="save">儲存紀錄</button>
+<button id="clear">清除</button>
+</div>
+
+<div class="pbar"><div class="top"><button id="photoAdd">＋ 加照片</button><label><input type="checkbox" id="photoBlend" style="width:auto">融合表格顏色</label></div><input type="file" id="photoFile" accept="image/*" multiple hidden><div id="photoList"></div><div class="phint">拖曳滑桿調整透明度；照片只存在這台裝置。</div></div>
+
+<h2>結帳紀錄</h2>
+<div class="status" id="status"></div>
+<div class="warn" id="warn"></div>
+<button id="migrate" style="display:none"></button>
+<button id="clearLocal" style="display:none"></button>
+<div id="records"></div>
+<button id="clearAll" style="display:none">刪除所有紀錄</button>
+</div>
+<div class="toast" id="toast"></div>
+<div class="mask" id="mask"><div class="dlg"><p id="dlgMsg"></p><div class="btns"><button class="danger" id="dlgOk">刪除</button><button id="dlgNo">取消</button></div></div></div>
+<script>
+var D=[2000,1000,500,200,100,50,10,5,1];
+var KEY='cash-records-v1';
+var list=document.getElementById('list'),totalEl=document.getElementById('total');
+var posEl=document.getElementById('pos'),diffEl=document.getElementById('diff'),boxTotal=document.getElementById('boxTotal'),boxPos=document.getElementById('boxPos');
+var statusEl=document.getElementById('status'),migrateBtn=document.getElementById('migrate');
+var inputs=[],subs=[],records=[],db=null;
+var toastT;function notify(m){var t=document.getElementById('toast');t.textContent=m;t.style.display='block';clearTimeout(toastT);toastT=setTimeout(function(){t.style.display='none'},7000)}
+var warnEl=document.getElementById('warn'),canWrite=null;
+function showWarn(m){warnEl.textContent=m;warnEl.style.display=m?'block':'none'}
+function errText(e){return e&&e.code?'（'+e.code+(e.message?'：'+e.message:'')+'）':(e&&e.message?'（'+e.message+'）':'')}
+function askConfirm(msg,okLabel){return new Promise(function(res){
+  var m=document.getElementById('mask'),ok=document.getElementById('dlgOk'),no=document.getElementById('dlgNo');
+  document.getElementById('dlgMsg').textContent=msg;ok.textContent=okLabel||'刪除';m.style.display='flex';
+  function done(v){m.style.display='none';ok.onclick=no.onclick=null;res(v)}
+  ok.onclick=function(){done(true)};no.onclick=function(){done(false)};
+})}
+function fmt(n){return n.toLocaleString('en-US')}
+function today(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function counts(){return inputs.map(function(i){var n=parseInt(i.value.replace(/,/g,''),10);return (isNaN(n)||n<0)?0:n})}
+function fmtNum(el){
+  var raw=el.value,caret=el.selectionStart||0;
+  var before=raw.slice(0,caret).replace(/\D/g,'').length;
+  var digits=raw.replace(/\D/g,'').replace(/^0+(?=\d)/,'');
+  var f=digits?Number(digits).toLocaleString('en-US'):'';
+  el.value=f;
+  var i=0,c=0;while(i<f.length&&c<before){if(/\d/.test(f[i]))c++;i++}
+  try{el.setSelectionRange(i,i)}catch(e){}
+}
+function getPos(){var v=posEl.value.replace(/,/g,'').trim(),n=parseInt(v,10);return (v===''||isNaN(n))?null:n}
+function calc(){
+  var t=0,c=counts();
+  for(var i=0;i<D.length;i++){var s=c[i]*D[i];subs[i].textContent=fmt(s);t+=s}
+  totalEl.textContent=fmt(t);
+  var p=getPos();
+  diffEl.textContent=p===null?'':fmt(t-p);
+  document.getElementById('boxDiff').style.display=p===null?'none':'flex';
+  boxTotal.classList.toggle('red',p!==null&&t>p);
+  boxPos.classList.toggle('red',p!==null&&p>t);
+  return t;
+}
+function loadLocal(){try{var r=localStorage.getItem(KEY);var a=r?JSON.parse(r):[];return Array.isArray(a)?a:[]}catch(e){return []}}
+function saveLocal(a){try{localStorage.setItem(KEY,JSON.stringify(a))}catch(e){}}
+function render(){
+  var box=document.getElementById('records');
+  document.getElementById('clearAll').style.display=records.length?'block':'none';
+  if(!records.length){box.innerHTML='<div class="empty">還沒有紀錄</div>';return}
+  box.innerHTML=records.map(function(r){
+    var c=r.counts||[];
+    var rows=D.map(function(d,i){var n=c[i]||0;return n?'<tr><td>'+fmt(d)+'</td><td>'+n+'</td><td>'+fmt(n*d)+'</td></tr>':''}).join('');
+    return '<div class="rec"><div class="rec-top"><span class="rec-date">'+esc(r.date||'')+'</span><span class="rec-total">'+fmt(r.total||0)+'</span></div>'+
+      (r.pos!=null?'<div class="rec-pos">應有金額 '+fmt(r.pos)+' ・ 差額 '+fmt((r.total||0)-r.pos)+'</div>':'')+
+      (r.note?'<div class="rec-note">'+esc(r.note)+'</div>':'')+
+      '<table><tr><th>面額</th><th>張數</th><th>小計</th></tr>'+rows+'</table>'+
+      '<button class="del" data-id="'+esc(r.id)+'"'+(db&&canWrite===false?' disabled':'')+'>刪除這筆</button></div>';
+  }).join('');
+}
+function showLocal(){records=loadLocal();render()}
+function showMigrate(){
+  var n=loadLocal().length;
+  if(db&&n){migrateBtn.style.display='block';migrateBtn.textContent='把這台裝置的舊紀錄（'+n+' 筆）上傳到共用紀錄'}
+  else migrateBtn.style.display='none';
+  var lb=document.getElementById('clearLocal');
+  lb.style.display=(db&&n)?'block':'none';
+  lb.textContent='刪除這台裝置的舊紀錄（'+n+' 筆）';
+}
+function initDb(){
+  statusEl.textContent='僅存在這台裝置（沒有連上共用紀錄）';
+  showLocal();
+  if(!window.claude||!claude.use)return;
+  claude.use('db').then(function(d){
+    if(!d)return;
+    db=d;
+    statusEl.textContent='';
+    claude.use('user').then(function(u){
+      if(!u)return;
+      return u.can('data.write').then(function(v){
+        canWrite=v;
+        if(v===false)showWarn('你目前只有「檢視」權限，無法新增或刪除共用紀錄。請請作者把你設為「協作者（Contributor）」或「編輯者」。');
+        render();
+      });
+    }).catch(function(){});
+    db.collection('records').orderBy('saved','desc').onSnapshot(function(snap){
+      records=snap.docs.map(function(x){var o=Object.assign({},x.data()||{});o.id=x.id;return o});render();showMigrate();
+    },function(){statusEl.textContent='共用紀錄讀取失敗，目前顯示這台裝置的紀錄';db=null;showLocal()});
+  }).catch(function(){});
+}
+D.forEach(function(d,i){
+  var r=document.createElement('div');r.className='row';
+  r.innerHTML='<div class="d">'+fmt(d)+'</div>';
+  var inp=document.createElement('input');inp.type='text';inp.inputMode='numeric';inp.autocomplete='off';inp.placeholder='0';
+  inp.addEventListener('input',function(){fmtNum(inp);calc()});
+  inp.addEventListener('focus',function(){inp.select()});
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter'&&inputs[i+1]){e.preventDefault();inputs[i+1].focus()}});
+  var c=document.createElement('div');c.appendChild(inp);
+  var s=document.createElement('div');s.className='sub';s.textContent='0';
+  r.appendChild(c);r.appendChild(s);list.appendChild(r);
+  inputs.push(inp);subs.push(s);
+});
+function reset(){inputs.forEach(function(i){i.value=''});posEl.value='';calc();inputs[0].focus()}
+document.getElementById('clear').addEventListener('click',reset);
+document.getElementById('save').addEventListener('click',function(){
+  var t=calc();
+  if(t===0){notify('目前金額是 0，請先輸入張數。');return}
+  var rec={date:today(),note:'',counts:counts(),total:t,saved:Date.now()};
+  var pp=getPos();if(pp!==null)rec.pos=pp;
+  if(db){
+    db.collection('records').add(rec).then(reset).catch(function(e){notify('儲存失敗'+errText(e))});
+  }else{
+    rec.id=String(rec.saved);var a=loadLocal();a.unshift(rec);saveLocal(a);showLocal();reset();
+  }
+});
+document.getElementById('records').addEventListener('click',function(e){
+  var b=e.target.closest('.del');if(!b||b.disabled)return;
+  var id=b.dataset.id;
+  askConfirm('確定要刪除這筆紀錄嗎？').then(function(ok){
+    if(!ok)return;
+    if(db){
+      db.collection('records').doc(id).delete().then(function(){notify('已刪除')}).catch(function(err){notify('刪除失敗'+errText(err)+'\n通常是權限不足，請確認你是協作者或編輯者。')});
+    }else{saveLocal(loadLocal().filter(function(r){return String(r.id)!==id}));showLocal();notify('已刪除')}
+  });
+});
+document.getElementById('clearAll').addEventListener('click',function(){
+  askConfirm('確定要刪除「所有」紀錄嗎？這個動作無法復原。','全部刪除').then(function(ok){
+    if(!ok)return;
+    if(db){
+      var ids=records.map(function(r){return r.id});
+      Promise.all(ids.map(function(i){return db.collection('records').doc(i).delete().then(function(){return null},function(err){return err||{}})})).then(function(rs){
+        var bad=rs.filter(function(x){return x});
+        notify(bad.length?('有 '+bad.length+' 筆刪除失敗'+errText(bad[0])):'已全部刪除');
+      });
+    }else{saveLocal([]);showLocal();notify('已全部刪除')}
+  });
+});
+migrateBtn.addEventListener('click',function(){
+  var a=loadLocal();
+  Promise.all(a.map(function(r){var o={date:r.date,note:r.note||'',counts:r.counts,total:r.total,saved:r.saved||Date.now()};if(r.pos!=null)o.pos=r.pos;return db.collection('records').add(o)}))
+    .then(function(){saveLocal([]);showMigrate()}).catch(function(){notify('上傳失敗，請稍後再試。')});
+});
+document.getElementById('clearLocal').addEventListener('click',function(){
+  askConfirm('只會刪除存在這台裝置的舊紀錄，共用紀錄不受影響。確定嗎？').then(function(ok){if(ok){saveLocal([]);showMigrate();notify('已刪除這台裝置的舊紀錄')}});
+});
+posEl.addEventListener('input',function(){
+  var raw=posEl.value,caret=posEl.selectionStart||0;
+  var before=raw.slice(0,caret).replace(/\D/g,'').length;
+  var digits=raw.replace(/\D/g,'').replace(/^0+(?=\d)/,'');
+  var f=digits?Number(digits).toLocaleString('en-US'):'';
+  posEl.value=f;
+  var i=0,c=0;while(i<f.length&&c<before){if(/\d/.test(f[i]))c++;i++}
+  try{posEl.setSelectionRange(i,i)}catch(e){}
+  calc();
+});
+posEl.addEventListener('focus',function(){posEl.select()});
+var PK='cash-photos-v1',ph={blend:true,items:[]};
+try{var pr=JSON.parse(localStorage.getItem(PK)||'null');if(pr&&Array.isArray(pr.items)){ph.items=pr.items;ph.blend=pr.blend!==false}}catch(e){}
+var phLayer=document.getElementById('photos'),phList=document.getElementById('photoList'),phBlend=document.getElementById('photoBlend'),phFile=document.getElementById('photoFile');
+function phSave(){try{localStorage.setItem(PK,JSON.stringify(ph));return true}catch(e){notify('照片太多，這台裝置空間不足，請刪除一些照片。');return false}}
+function phRender(){
+  list.classList.toggle('noblend',!ph.blend);phBlend.checked=ph.blend;
+  phLayer.innerHTML=ph.items.map(function(p){return '<img alt="" src="'+p.src+'" style="opacity:'+p.op/100+'" data-id="'+p.id+'">'}).join('');
+  phList.innerHTML=ph.items.map(function(p){return '<div class="pitem" data-id="'+p.id+'"><img class="pth" alt="" src="'+p.src+'"><input type="range" class="prange" min="5" max="100" value="'+p.op+'"><span class="pval">'+p.op+'%</span><button class="pdel">刪除</button></div>'}).join('');
+}
+function shrink(file){return new Promise(function(res,rej){
+  var fr=new FileReader();fr.onerror=rej;
+  fr.onload=function(){var im=new Image();im.onerror=rej;im.onload=function(){
+    var s=Math.min(1,900/Math.max(im.width,im.height)),c=document.createElement('canvas'),x;
+    c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);x=c.getContext('2d');
+    x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);
+    res(c.toDataURL('image/jpeg',0.8))};im.src=fr.result};
+  fr.readAsDataURL(file)})}
+document.getElementById('photoAdd').addEventListener('click',function(){phFile.click()});
+phFile.addEventListener('change',function(){
+  var fs=Array.prototype.slice.call(phFile.files||[]);phFile.value='';
+  if(!fs.length)return;
+  var before=ph.items.length;
+  fs.reduce(function(p,f,i){return p.then(function(){return shrink(f).then(function(src){ph.items.push({id:String(Date.now())+i,src:src,op:40})},function(){})})},Promise.resolve()).then(function(){
+    if(!phSave())ph.items.length=before;
+    phRender();
+  });
+});
+phBlend.addEventListener('change',function(){ph.blend=phBlend.checked;phSave();phRender()});
+phList.addEventListener('input',function(e){
+  var r=e.target.closest('.prange');if(!r)return;
+  var row=r.closest('.pitem'),id=row.dataset.id,v=parseInt(r.value,10);
+  ph.items.forEach(function(p){if(p.id===id)p.op=v});
+  row.querySelector('.pval').textContent=v+'%';
+  var im=phLayer.querySelector('img[data-id="'+id+'"]');if(im)im.style.opacity=v/100;
+});
+phList.addEventListener('change',function(e){if(e.target.closest('.prange'))phSave()});
+phList.addEventListener('click',function(e){
+  var b=e.target.closest('.pdel');if(!b)return;
+  var id=b.closest('.pitem').dataset.id;
+  askConfirm('確定要刪除這張照片嗎？').then(function(ok){if(!ok)return;ph.items=ph.items.filter(function(p){return p.id!==id});phSave();phRender()});
+});
+phRender();
+initDb();calc();
+</script>
+</body>
+</html>
